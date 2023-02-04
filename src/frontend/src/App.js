@@ -1,7 +1,14 @@
 import {useEffect, useState} from 'react'
 import {getAllStudents} from "./client";
-import {Breadcrumb, Layout, Menu, Table} from 'antd';
-import {DesktopOutlined, FileOutlined, PieChartOutlined, TeamOutlined, UserOutlined,} from '@ant-design/icons';
+import {Breadcrumb, Empty, Layout, Menu, Spin, Table} from 'antd';
+import {
+    DesktopOutlined,
+    FileOutlined,
+    LoadingOutlined,
+    PieChartOutlined,
+    TeamOutlined,
+    UserOutlined,
+} from '@ant-design/icons';
 
 import './App.css';
 
@@ -31,17 +38,23 @@ const columns = [
     },
 ]
 
+const antIcon = <LoadingOutlined style={{fontSize: 24}} spin/>
+
 function App() {
     const [students, setStudents] = useState([]);
-    const [collapsed, setCollapsed] = useState(false)
+    const [collapsed, setCollapsed] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
 
-    const fetchStudents = () =>
+    const fetchStudents = () => {
+
         getAllStudents()
             .then(res => res.json())
             .then(data => {
                 console.log(data);
                 setStudents(data);
+                setIsFetching(false);
             })
+    }
 
     useEffect(() => {
         console.log("component is mounted");
@@ -49,11 +62,18 @@ function App() {
     }, []);
 
     const renderStudents = () => {
+        if (isFetching) {
+            return <Spin indicator={antIcon}></Spin>
+        }
         if (students.length <= 0) {
-            return "No Data Available :("
+            return <Empty/>
         }
         return <Table dataSource={students}
-                      columns={columns}/>
+                      columns={columns}
+                      bordered
+                      title={() => 'Students'}
+                      pagination={{pageSize: 50}} scroll={{y: 240}}
+                      rowKey={(student) => student.id}/>
     }
 
 
@@ -90,7 +110,6 @@ function App() {
                     <Breadcrumb.Item>Bill</Breadcrumb.Item>
                 </Breadcrumb>
                 <div className="site-layout-background" style={{padding: 24, minHeight: 360}}>
-                    {students.length <= 0 ? 'No Data :(' : 'Data Available!'}
                     {renderStudents()}
                 </div>
             </Content>
